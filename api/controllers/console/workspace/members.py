@@ -1,34 +1,29 @@
 from urllib import parse
 
-from flask import request
-from flask_login import current_user
-from flask_restful import Resource, abort, marshal_with, reqparse
-
 import services
 from configs import dify_config
 from controllers.console import api
-from controllers.console.auth.error import (
-    CannotTransferOwnerToSelfError,
-    EmailCodeError,
-    InvalidEmailError,
-    InvalidTokenError,
-    MemberNotInTenantError,
-    NotOwnerError,
-    OwnerTransferLimitError,
-)
-from controllers.console.error import EmailSendIpLimitError, WorkspaceMembersLimitExceeded
-from controllers.console.wraps import (
-    account_initialization_required,
-    cloud_edition_billing_resource_check,
-    is_allow_transfer_owner,
-    setup_required,
-)
+from controllers.console.auth.error import (CannotTransferOwnerToSelfError,
+                                            EmailCodeError, InvalidEmailError,
+                                            InvalidTokenError,
+                                            MemberNotInTenantError,
+                                            NotOwnerError,
+                                            OwnerTransferLimitError)
+from controllers.console.error import (EmailSendIpLimitError,
+                                       WorkspaceMembersLimitExceeded)
+from controllers.console.wraps import (account_initialization_required,
+                                       cloud_edition_billing_resource_check,
+                                       is_allow_transfer_owner, setup_required)
 from extensions.ext_database import db
 from fields.member_fields import account_with_role_list_fields
+from flask import request
+from flask_login import current_user
+from flask_restful import Resource, abort, marshal_with, reqparse
 from libs.helper import extract_remote_ip
 from libs.login import login_required
 from models.account import Account, TenantAccountRole
-from services.account_service import AccountService, RegisterService, TenantService
+from services.account_service import (AccountService, RegisterService,
+                                      TenantService)
 from services.errors.account import AccountAlreadyInTenantError
 from services.feature_service import FeatureService
 
@@ -264,11 +259,9 @@ class OwnerTransfer(Resource):
 
         transfer_token_data = AccountService.get_owner_transfer_data(args["token"])
         if not transfer_token_data:
-            print(transfer_token_data, "transfer_token_data")
             raise InvalidTokenError()
 
         if transfer_token_data.get("email") != current_user.email:
-            print(transfer_token_data.get("email"), current_user.email)
             raise InvalidEmailError()
 
         AccountService.revoke_owner_transfer_token(args["token"])

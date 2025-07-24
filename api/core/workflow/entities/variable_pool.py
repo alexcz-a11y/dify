@@ -3,16 +3,17 @@ from collections import defaultdict
 from collections.abc import Mapping, Sequence
 from typing import Annotated, Any, Union, cast
 
-from pydantic import BaseModel, Field
-
 from core.file import File, FileAttribute, file_manager
 from core.variables import Segment, SegmentGroup, Variable
 from core.variables.consts import MIN_SELECTORS_LENGTH
 from core.variables.segments import FileSegment, NoneSegment
 from core.variables.variables import VariableUnion
-from core.workflow.constants import CONVERSATION_VARIABLE_NODE_ID, ENVIRONMENT_VARIABLE_NODE_ID, SYSTEM_VARIABLE_NODE_ID
+from core.workflow.constants import (CONVERSATION_VARIABLE_NODE_ID,
+                                     ENVIRONMENT_VARIABLE_NODE_ID,
+                                     SYSTEM_VARIABLE_NODE_ID)
 from core.workflow.system_variable import SystemVariable
 from factories import variable_factory
+from pydantic import BaseModel, Field
 
 VariableValue = Union[str, int, float, dict, list, File]
 
@@ -152,7 +153,6 @@ class VariablePool(BaseModel):
             self.variable_dictionary[selector[0]] = {}
             return
         key, hash_key = self._selector_to_keys(selector)
-        hash_key = hash(tuple(selector[1:]))
         self.variable_dictionary[key].pop(hash_key, None)
 
     def convert_template(self, template: str, /):
@@ -186,4 +186,5 @@ class VariablePool(BaseModel):
     @classmethod
     def empty(cls) -> "VariablePool":
         """Create an empty variable pool."""
+        return cls(system_variables=SystemVariable.empty())
         return cls(system_variables=SystemVariable.empty())

@@ -1,19 +1,19 @@
-import React, { useState } from 'react'
-import { Trans, useTranslation } from 'react-i18next'
-import { useContext } from 'use-context-selector'
-import { RiCloseLine } from '@remixicon/react'
-import { useAppContext } from '@/context/app-context'
-import { ToastContext } from '@/app/components/base/toast'
-import Modal from '@/app/components/base/modal'
 import Button from '@/app/components/base/button'
 import Input from '@/app/components/base/input'
-import MemberSelector from './member-selector'
+import Modal from '@/app/components/base/modal'
+import { ToastContext } from '@/app/components/base/toast'
+import { useAppContext } from '@/context/app-context'
 import {
   ownershipTransfer,
   sendOwnerEmail,
   verifyOwnerEmail,
 } from '@/service/common'
+import { RiCloseLine } from '@remixicon/react'
 import { noop } from 'lodash-es'
+import { useState } from 'react'
+import { Trans, useTranslation } from 'react-i18next'
+import { useContext } from 'use-context-selector'
+import MemberSelector from './member-selector'
 
 type Props = {
   show: boolean
@@ -52,9 +52,7 @@ const TransferOwnershipModal = ({ onClose, show }: Props) => {
 
   const sendEmail = async () => {
     try {
-      const res = await sendOwnerEmail({
-        language: userProfile.interface_language,
-      })
+      const res = await sendOwnerEmail({})
       startCount()
       if (res.data)
         setStepToken(res.data)

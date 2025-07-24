@@ -1,44 +1,24 @@
 import dataclasses
 
-from pydantic import BaseModel
-
 from core.file import File, FileTransferMethod, FileType
 from core.helper import encrypter
-from core.variables.segments import (
-    ArrayAnySegment,
-    ArrayFileSegment,
-    ArrayNumberSegment,
-    ArrayObjectSegment,
-    ArrayStringSegment,
-    FileSegment,
-    FloatSegment,
-    IntegerSegment,
-    NoneSegment,
-    ObjectSegment,
-    Segment,
-    SegmentUnion,
-    StringSegment,
-    get_segment_discriminator,
-)
+from core.variables.segments import (ArrayAnySegment, ArrayFileSegment,
+                                     ArrayNumberSegment, ArrayObjectSegment,
+                                     ArrayStringSegment, FileSegment,
+                                     FloatSegment, IntegerSegment, NoneSegment,
+                                     ObjectSegment, Segment, SegmentUnion,
+                                     StringSegment, get_segment_discriminator)
 from core.variables.types import SegmentType
-from core.variables.variables import (
-    ArrayAnyVariable,
-    ArrayFileVariable,
-    ArrayNumberVariable,
-    ArrayObjectVariable,
-    ArrayStringVariable,
-    FileVariable,
-    FloatVariable,
-    IntegerVariable,
-    NoneVariable,
-    ObjectVariable,
-    SecretVariable,
-    StringVariable,
-    Variable,
-    VariableUnion,
-)
+from core.variables.variables import (ArrayAnyVariable, ArrayFileVariable,
+                                      ArrayNumberVariable, ArrayObjectVariable,
+                                      ArrayStringVariable, FileVariable,
+                                      FloatVariable, IntegerVariable,
+                                      NoneVariable, ObjectVariable,
+                                      SecretVariable, StringVariable, Variable,
+                                      VariableUnion)
 from core.workflow.entities.variable_pool import VariablePool
 from core.workflow.system_variable import SystemVariable
+from pydantic import BaseModel
 
 
 def test_segment_group_to_text():
@@ -376,7 +356,7 @@ class TestSegmentDumpAndLoad:
                 f"get_segment_discriminator failed for serialized form of type {type(variable)}"
             )
 
-    def test_invlaid_value_for_discriminator(self):
+    def test_invalid_value_for_discriminator(self):
         # Test invalid cases
         assert get_segment_discriminator({"value_type": "invalid"}) is None
         assert get_segment_discriminator({}) is None

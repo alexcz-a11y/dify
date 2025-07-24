@@ -1,27 +1,28 @@
 'use client'
-import { useState } from 'react'
-import { useTranslation } from 'react-i18next'
+import AppIcon from '@/app/components/base/app-icon'
+import Button from '@/app/components/base/button'
+import Input from '@/app/components/base/input'
+import Modal from '@/app/components/base/modal'
+import PremiumBadge from '@/app/components/base/premium-badge'
+import { ToastContext } from '@/app/components/base/toast'
+import type { IItem } from '@/app/components/header/account-setting/collapse'
+import Collapse from '@/app/components/header/account-setting/collapse'
+import { IS_CE_EDITION, validPassword } from '@/config'
+import { useAppContext } from '@/context/app-context'
+import { useGlobalPublicStore } from '@/context/global-public-context'
+import { useProviderContext } from '@/context/provider-context'
+import { fetchAppList } from '@/service/apps'
+import { updateUserProfile } from '@/service/common'
 import {
   RiGraduationCapFill,
 } from '@remixicon/react'
+import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import useSWR from 'swr'
 import { useContext } from 'use-context-selector'
 import DeleteAccount from '../delete-account'
 import AvatarWithEdit from './AvatarWithEdit'
-import Collapse from '@/app/components/header/account-setting/collapse'
-import type { IItem } from '@/app/components/header/account-setting/collapse'
-import Modal from '@/app/components/base/modal'
-import Button from '@/app/components/base/button'
-import { updateUserProfile } from '@/service/common'
-import { useAppContext } from '@/context/app-context'
-import { useProviderContext } from '@/context/provider-context'
-import { ToastContext } from '@/app/components/base/toast'
-import AppIcon from '@/app/components/base/app-icon'
-import { IS_CE_EDITION } from '@/config'
-import Input from '@/app/components/base/input'
-import PremiumBadge from '@/app/components/base/premium-badge'
-import { useGlobalPublicStore } from '@/context/global-public-context'
 import EmailChangeModal from './email-change-modal'
-import { validPassword } from '@/config'
 
 const titleClassName = `
   system-sm-semibold text-text-secondary
@@ -33,7 +34,9 @@ const descriptionClassName = `
 export default function AccountPage() {
   const { t } = useTranslation()
   const { systemFeatures } = useGlobalPublicStore()
-  const { mutateUserProfile, userProfile, apps } = useAppContext()
+  const { data: appList } = useSWR({ url: '/apps', params: { page: 1, limit: 100, name: '' } }, fetchAppList)
+  const apps = appList?.data || []
+  const { mutateUserProfile, userProfile } = useAppContext()
   const { isEducationAccount } = useProviderContext()
   const { notify } = useContext(ToastContext)
   const [editNameModalVisible, setEditNameModalVisible] = useState(false)
@@ -202,7 +205,7 @@ export default function AccountPage() {
         {!!apps.length && (
           <Collapse
             title={`${t('common.account.showAppLength', { length: apps.length })}`}
-            items={apps.map(app => ({ ...app, key: app.id, name: app.name }))}
+            items={apps.map(app => ({ key: app.id, name: app.name }))}
             renderItem={renderAppItem}
             wrapperClassName='mt-2'
           />

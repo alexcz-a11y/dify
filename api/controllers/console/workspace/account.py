@@ -1,47 +1,37 @@
-import datetime
-
 import pytz
-from flask import request
-from flask_login import current_user
-from flask_restful import Resource, fields, marshal_with, reqparse
-from sqlalchemy import select
-from sqlalchemy.orm import Session
-
 from configs import dify_config
 from constants.languages import supported_language
 from controllers.console import api
-from controllers.console.auth.error import (
-    EmailAlreadyInUseError,
-    EmailChangeLimitError,
-    EmailCodeError,
-    InvalidEmailError,
-    InvalidTokenError,
-)
+from controllers.console.auth.error import (EmailAlreadyInUseError,
+                                            EmailChangeLimitError,
+                                            EmailCodeError, InvalidEmailError,
+                                            InvalidTokenError)
 from controllers.console.error import AccountNotFound, EmailSendIpLimitError
 from controllers.console.workspace.error import (
-    AccountAlreadyInitedError,
-    CurrentPasswordIncorrectError,
-    InvalidAccountDeletionCodeError,
-    InvalidInvitationCodeError,
-    RepeatPasswordNotMatchError,
-)
-from controllers.console.wraps import (
-    account_initialization_required,
-    cloud_edition_billing_enabled,
-    enable_change_email,
-    enterprise_license_required,
-    only_edition_cloud,
-    setup_required,
-)
+    AccountAlreadyInitedError, CurrentPasswordIncorrectError,
+    InvalidAccountDeletionCodeError, InvalidInvitationCodeError,
+    RepeatPasswordNotMatchError)
+from controllers.console.wraps import (account_initialization_required,
+                                       cloud_edition_billing_enabled,
+                                       enable_change_email,
+                                       enterprise_license_required,
+                                       only_edition_cloud, setup_required)
 from extensions.ext_database import db
 from fields.member_fields import account_fields
+from flask import request
+from flask_login import current_user
+from flask_restful import Resource, fields, marshal_with, reqparse
+from libs.datetime_utils import naive_utc_now
 from libs.helper import TimestampField, email, extract_remote_ip, timezone
 from libs.login import login_required
 from models import AccountIntegrate, InvitationCode
 from models.account import Account
 from services.account_service import AccountService
 from services.billing_service import BillingService
-from services.errors.account import CurrentPasswordIncorrectError as ServiceCurrentPasswordIncorrectError
+from services.errors.account import \
+    CurrentPasswordIncorrectError as ServiceCurrentPasswordIncorrectError
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 
 class AccountInitApi(Resource):
@@ -80,7 +70,7 @@ class AccountInitApi(Resource):
                 raise InvalidInvitationCodeError()
 
             invitation_code.status = "used"
-            invitation_code.used_at = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
+            invitation_code.used_at = naive_utc_now()
             invitation_code.used_by_tenant_id = account.current_tenant_id
             invitation_code.used_by_account_id = account.id
 
@@ -88,7 +78,7 @@ class AccountInitApi(Resource):
         account.timezone = args["timezone"]
         account.interface_theme = "light"
         account.status = "active"
-        account.initialized_at = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
+        account.initialized_at = naive_utc_now()
         db.session.commit()
 
         return {"result": "success"}
@@ -482,9 +472,6 @@ class ChangeEmailResetApi(Resource):
 
         reset_data = AccountService.get_change_email_data(args["token"])
         if not reset_data:
-            raise InvalidTokenError()
-        # Must use token in reset phase
-        if reset_data.get("phase", "") != "change_email":
             raise InvalidTokenError()
 
         AccountService.revoke_change_email_token(args["token"])

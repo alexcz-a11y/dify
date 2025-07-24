@@ -1,12 +1,7 @@
-import React, { useState } from 'react'
-import { Trans, useTranslation } from 'react-i18next'
-import { useRouter } from 'next/navigation'
-import { useContext } from 'use-context-selector'
-import { ToastContext } from '@/app/components/base/toast'
-import { RiCloseLine } from '@remixicon/react'
-import Modal from '@/app/components/base/modal'
 import Button from '@/app/components/base/button'
 import Input from '@/app/components/base/input'
+import Modal from '@/app/components/base/modal'
+import { ToastContext } from '@/app/components/base/toast'
 import {
   checkEmailExisted,
   logout,
@@ -14,7 +9,12 @@ import {
   sendVerifyCode,
   verifyEmail,
 } from '@/service/common'
+import { RiCloseLine } from '@remixicon/react'
 import { noop } from 'lodash-es'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+import { Trans, useTranslation } from 'react-i18next'
+import { useContext } from 'use-context-selector'
 
 type Props = {
   show: boolean
@@ -39,6 +39,7 @@ const EmailChangeModal = ({ onClose, email, show }: Props) => {
   const [time, setTime] = useState<number>(0)
   const [stepToken, setStepToken] = useState<string>('')
   const [newEmailExited, setNewEmailExited] = useState<boolean>(false)
+  const [isCheckingEmail, setIsCheckingEmail] = useState<boolean>(false)
 
   const startCount = () => {
     setTime(60)
@@ -72,7 +73,7 @@ const EmailChangeModal = ({ onClose, email, show }: Props) => {
     }
   }
 
-  const verifyEmailAddress = async (email: string, code: string, token: string, callback?: () => void) => {
+  const verifyEmailAddress = async (email: string, code: string, token: string, callback?: (data?: any) => void) => {
     try {
       const res = await verifyEmail({
         email,
@@ -81,7 +82,7 @@ const EmailChangeModal = ({ onClose, email, show }: Props) => {
       })
       if (res.is_valid) {
         setStepToken(res.token)
-        callback?.()
+        callback?.(res.token)
       }
       else {
         notify({
@@ -112,33 +113,29 @@ const EmailChangeModal = ({ onClose, email, show }: Props) => {
   }
 
   const isValidEmail = (email: string): boolean => {
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
-    return emailRegex.test(email)
+    const rfc5322emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
+    return rfc5322emailRegex.test(email) && email.length <= 254
   }
 
   const checkNewEmailExisted = async (email: string) => {
+    setIsCheckingEmail(true)
     try {
       await checkEmailExisted({
         email,
       })
       setNewEmailExited(false)
     }
-    catch (error) {
-      setNewEmailExited(false)
-      if ((error as any)?.code === 'email_already_in_use') {
-        setNewEmailExited(true)
-      }
-      else {
-        notify({
-          type: 'error',
-          message: `Error checking email existence: ${error ? (error as any).message : ''}`,
-        })
-      }
+    catch {
+      setNewEmailExited(true)
+    }
+    finally {
+      setIsCheckingEmail(false)
     }
   }
 
   const handleNewEmailValueChange = (mailAddress: string) => {
     setMail(mailAddress)
+    setNewEmailExited(false)
     if (isValidEmail(mailAddress))
       checkNewEmailExisted(mailAddress)
   }
@@ -172,11 +169,11 @@ const EmailChangeModal = ({ onClose, email, show }: Props) => {
     router.push('/signin')
   }
 
-  const updateEmail = async () => {
+  const updateEmail = async (lastToken: string) => {
     try {
       await resetEmail({
         new_email: mail,
-        token: stepToken,
+        token: lastToken,
       })
       handleLogout()
     }
@@ -189,7 +186,7 @@ const EmailChangeModal = ({ onClose, email, show }: Props) => {
   }
 
   const submitNewEmail = async () => {
-    await verifyEmailAddress(mail, code, stepToken, () => updateEmail())
+    await verifyEmailAddress(mail, code, stepToken, updateEmail)
   }
 
   return (
@@ -302,7 +299,7 @@ const EmailChangeModal = ({ onClose, email, show }: Props) => {
           </div>
           <div className='mt-3 space-y-2'>
             <Button
-              disabled={!mail}
+              disabled={!mail || newEmailExited || isCheckingEmail || !isValidEmail(mail)}
               className='!w-full'
               variant='primary'
               onClick={sendCodeToNewEmail}

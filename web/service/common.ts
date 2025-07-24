@@ -1,5 +1,16 @@
-import type { Fetcher } from 'swr'
-import { del, get, patch, post, put } from './base'
+import type {
+  DefaultModelResponse,
+  Model,
+  ModelItem,
+  ModelLoadBalancingConfig,
+  ModelParameterRule,
+  ModelProvider,
+  ModelTypeEnum,
+} from '@/app/components/header/account-setting/model-provider-page/declarations'
+import type {
+  UpdateOpenAIKeyResponse,
+  ValidateOpenAIKeyResponse,
+} from '@/models/app'
 import type {
   AccountIntegrate,
   ApiBasedExtension,
@@ -22,21 +33,10 @@ import type {
   SetupStatusResponse,
   UserProfileOriginResponse,
 } from '@/models/common'
-import type {
-  UpdateOpenAIKeyResponse,
-  ValidateOpenAIKeyResponse,
-} from '@/models/app'
-import type {
-  DefaultModelResponse,
-  Model,
-  ModelItem,
-  ModelLoadBalancingConfig,
-  ModelParameterRule,
-  ModelProvider,
-  ModelTypeEnum,
-} from '@/app/components/header/account-setting/model-provider-page/declarations'
 import type { RETRIEVE_METHOD } from '@/types/app'
 import type { SystemFeatures } from '@/types/feature'
+import type { Fetcher } from 'swr'
+import { del, get, patch, post, put } from './base'
 
 type LoginSuccess = {
   result: 'success'
@@ -88,7 +88,7 @@ export const logout: Fetcher<CommonResponse, { url: string; params: Record<strin
   return get<CommonResponse>(url, params)
 }
 
-export const fetchLanggeniusVersion: Fetcher<LangGeniusVersionResponse, { url: string; params: Record<string, any> }> = ({ url, params }) => {
+export const fetchLangGeniusVersion: Fetcher<LangGeniusVersionResponse, { url: string; params: Record<string, any> }> = ({ url, params }) => {
   return get<LangGeniusVersionResponse>(url, { params })
 }
 
@@ -396,4 +396,4 @@ export const resetEmail = (body: { new_email: string; token: string }) =>
   post<CommonResponse>('/account/change-email/reset', { body })
 
 export const checkEmailExisted = (body: { email: string }) =>
-  post<CommonResponse>('/account/change-email/check-email-unique', { body })
+  post<CommonResponse>('/account/change-email/check-email-unique', { body }, { silent: true })
