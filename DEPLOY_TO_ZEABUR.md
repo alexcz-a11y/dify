@@ -1,14 +1,15 @@
-# 在 Zeabur 上部署 Dify
+# 在 Zeabur 上部署 Dify - 手动配置指南
 
-本指南将帮助你在 Zeabur 平台上手动部署 Dify，而不使用模板方式。
+本指南将帮助你在 Zeabur 平台上手动部署 Dify，解决自动检测问题。
 
-## 前置要求
+## 问题分析
 
-1. 拥有 Zeabur 账户（需要升级到 Developer Plan，$5/月）
-2. 已克隆 Dify 官方仓库到本地
-3. 了解基本的 Git 操作
+Zeabur 将项目识别为"静态 HTML5 站点"的原因：
+1. Zeabur 无法自动检测多服务项目
+2. 需要手动配置每个服务
+3. 配置文件格式可能不被支持
 
-## 部署步骤
+## 解决方案：手动配置部署
 
 ### 1. 准备项目
 
@@ -20,10 +21,9 @@ git status
 
 ### 2. 推送配置到 GitHub
 
-将包含 Zeabur 配置的项目推送到你的 GitHub 仓库：
 ```bash
 git add .
-git commit -m "Add Zeabur deployment configuration"
+git commit -m "Add Zeabur YAML configuration"
 git push origin main
 ```
 
@@ -32,35 +32,63 @@ git push origin main
 1. 登录 [Zeabur Dashboard](https://zeabur.com/dashboard)
 2. 点击 "Create Project"
 3. 选择 "Deploy from Git"
-4. 选择你的 GitHub 仓库
+4. 选择你的 GitHub 仓库：`alexcz-a11y/dify`
 5. 选择 "main" 分支
 
-### 4. 解决检测问题
+### 4. 手动配置服务
 
-如果 Zeabur 将项目识别为"静态 HTML5 站点"：
+由于 Zeabur 无法自动检测多服务项目，需要手动创建每个服务：
 
-1. **检查配置文件**：确保根目录有 `zeabur.toml` 文件
-2. **重新部署**：点击"配置"按钮，然后重新部署
-3. **手动配置**：如果自动检测失败，可以手动配置服务
+#### 步骤 1：创建数据库服务
 
-### 5. 配置服务
+1. **创建 PostgreSQL 服务**：
+   - 点击 "Add Service"
+   - 选择 "PostgreSQL"
+   - 版本选择 "16"
+   - 服务名称：`dify-postgres`
 
-Zeabur 会自动检测到 `zeabur.toml` 配置文件，并创建以下服务：
+2. **创建 Redis 服务**：
+   - 点击 "Add Service"
+   - 选择 "Redis"
+   - 版本选择 "7"
+   - 服务名称：`dify-redis`
 
-#### 数据库服务
-- **dify-postgres**: PostgreSQL 数据库（版本 16）
-- **dify-redis**: Redis 缓存（版本 7）
-- **dify-weaviate**: 向量数据库（版本 1.22.4）
+3. **创建 Weaviate 服务**：
+   - 点击 "Add Service"
+   - 选择 "Weaviate"
+   - 版本选择 "1.22.4"
+   - 服务名称：`dify-weaviate`
 
-#### 应用服务
-- **dify-api**: Python Flask API 服务（端口 5001）
-- **dify-web**: Next.js Web 前端服务（端口 3000）
+#### 步骤 2：创建 API 服务
 
-### 6. 环境变量配置
+1. 点击 "Add Service"
+2. 选择 "Deploy from Git"
+3. 选择同一个仓库：`alexcz-a11y/dify`
+4. 在配置中设置：
+   - **Service Name**: `dify-api`
+   - **Source Directory**: `api`
+   - **Build Command**: `pip install uv && uv sync --locked`
+   - **Start Command**: `python app.py`
+   - **Port**: `5001`
 
-在 Zeabur Dashboard 中，为每个服务配置必要的环境变量：
+#### 步骤 3：创建 Web 服务
+
+1. 点击 "Add Service"
+2. 选择 "Deploy from Git"
+3. 选择同一个仓库：`alexcz-a11y/dify`
+4. 在配置中设置：
+   - **Service Name**: `dify-web`
+   - **Source Directory**: `web`
+   - **Build Command**: `npm install -g pnpm && pnpm install --frozen-lockfile && pnpm build`
+   - **Start Command**: `pnpm start`
+   - **Port**: `3000`
+
+### 5. 配置环境变量
 
 #### API 服务环境变量
+
+在 `dify-api` 服务的设置中添加以下环境变量：
+
 ```
 FLASK_APP=app.py
 EDITION=SELF_HOSTED
@@ -82,6 +110,9 @@ APP_WEB_URL=https://{{services.dify-web.domain}}
 ```
 
 #### Web 服务环境变量
+
+在 `dify-web` 服务的设置中添加以下环境变量：
+
 ```
 NODE_ENV=production
 EDITION=SELF_HOSTED
@@ -93,41 +124,57 @@ MARKETPLACE_API_URL=https://marketplace.dify.ai
 MARKETPLACE_URL=https://marketplace.dify.ai
 ```
 
-### 7. 部署和启动
+### 6. 部署和启动
 
-1. 点击 "部署" 开始部署
-2. 等待所有服务构建完成
-3. 检查服务状态，确保所有服务都正常运行
+1. 确保所有服务都已创建
+2. 点击每个服务的 "Deploy" 按钮
+3. 等待所有服务构建完成
+4. 检查服务状态，确保所有服务都正常运行
 
-### 8. 域名配置
+### 7. 域名配置
 
 1. 为 API 和 Web 服务分配自定义域名
 2. 更新环境变量中的 URL 配置
 3. 重新部署服务以应用新的域名
 
+## 替代方案：使用 Zeabur CLI
+
+如果手动配置太复杂，可以尝试使用 Zeabur CLI：
+
+```bash
+# 安装 Zeabur CLI
+npm install -g @zeabur/cli
+
+# 登录
+zeabur login
+
+# 部署项目
+zeabur deploy
+```
+
 ## 故障排除
 
 ### 常见问题
 
-1. **Zeabur 检测为静态站点**
-   - 确保根目录有 `zeabur.toml` 文件
-   - 检查配置文件格式是否正确
-   - 尝试重新部署或手动配置
-
-2. **构建失败**
-   - 检查 `zeabur.toml` 配置是否正确
-   - 确保所有依赖都已正确安装
-   - 查看构建日志获取详细错误信息
-
-3. **服务无法启动**
+1. **服务无法启动**
    - 检查环境变量配置
    - 查看服务日志以获取错误信息
    - 确保数据库服务已启动
 
-4. **数据库连接失败**
+2. **构建失败**
+   - 检查构建命令是否正确
+   - 确保所有依赖都已正确安装
+   - 查看构建日志获取详细错误信息
+
+3. **数据库连接失败**
    - 确保数据库服务已启动
    - 检查连接字符串和凭据
    - 验证服务间网络连接
+
+4. **环境变量未生效**
+   - 确保环境变量格式正确
+   - 重新部署服务以应用新的环境变量
+   - 检查服务间引用格式
 
 ### 日志查看
 
@@ -143,7 +190,7 @@ MARKETPLACE_URL=https://marketplace.dify.ai
 当 Dify 发布新版本时：
 1. 拉取最新代码：`git pull upstream main`
 2. 推送更新：`git push origin main`
-3. 在 Zeabur 中重新部署项目
+3. 在 Zeabur 中重新部署相关服务
 
 ### 备份
 
