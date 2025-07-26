@@ -1,31 +1,31 @@
 [project]
 name = "dify"
 
-[services.api]
+[[services]]
 name = "dify-api"
 source = "api"
-buildCommand = "echo 'Building API service...'"
+buildCommand = "pip install uv && uv sync --locked"
 startCommand = "python app.py"
 port = 5001
 
-[services.web]
+[[services]]
 name = "dify-web"
 source = "web"
-buildCommand = "pnpm install && pnpm build"
+buildCommand = "npm install -g pnpm && pnpm install --frozen-lockfile && pnpm build"
 startCommand = "pnpm start"
 port = 3000
 
-[services.postgres]
+[[services]]
 name = "dify-postgres"
 type = "postgresql"
 version = "16"
 
-[services.redis]
+[[services]]
 name = "dify-redis"
 type = "redis"
 version = "7"
 
-[services.weaviate]
+[[services]]
 name = "dify-weaviate"
 type = "weaviate"
 version = "1.22.4"
@@ -35,17 +35,17 @@ version = "1.22.4"
 POSTGRES_USER = "postgres"
 POSTGRES_PASSWORD = "difyai123456"
 POSTGRES_DB = "dify"
-POSTGRES_HOST = "{{services.postgres.internalHost}}"
-POSTGRES_PORT = "{{services.postgres.port}}"
+POSTGRES_HOST = "{{services.dify-postgres.internalHost}}"
+POSTGRES_PORT = "{{services.dify-postgres.port}}"
 
 # Redis Configuration
-REDIS_HOST = "{{services.redis.internalHost}}"
-REDIS_PORT = "{{services.redis.port}}"
+REDIS_HOST = "{{services.dify-redis.internalHost}}"
+REDIS_PORT = "{{services.dify-redis.port}}"
 REDIS_PASSWORD = "difyai123456"
 
 # Weaviate Configuration
-WEAVIATE_HOST = "{{services.weaviate.internalHost}}"
-WEAVIATE_PORT = "{{services.weaviate.port}}"
+WEAVIATE_HOST = "{{services.dify-weaviate.internalHost}}"
+WEAVIATE_PORT = "{{services.dify-weaviate.port}}"
 
 # Dify Configuration
 EDITION = "SELF_HOSTED"
@@ -53,11 +53,11 @@ DEPLOY_ENV = "PRODUCTION"
 FLASK_APP = "app.py"
 
 # API URLs
-CONSOLE_API_URL = "https://{{services.api.domain}}"
-CONSOLE_WEB_URL = "https://{{services.web.domain}}"
-SERVICE_API_URL = "https://{{services.api.domain}}"
-APP_WEB_URL = "https://{{services.web.domain}}"
-APP_API_URL = "https://{{services.api.domain}}"
+CONSOLE_API_URL = "https://{{services.dify-api.domain}}"
+CONSOLE_WEB_URL = "https://{{services.dify-web.domain}}"
+SERVICE_API_URL = "https://{{services.dify-api.domain}}"
+APP_WEB_URL = "https://{{services.dify-web.domain}}"
+APP_API_URL = "https://{{services.dify-api.domain}}"
 
 # Web Configuration
 NEXT_TELEMETRY_DISABLED = "1"

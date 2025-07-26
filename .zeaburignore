@@ -1,0 +1,21 @@
+# Zeabur ignore file
+# 确保包含所有必要的文件用于部署
+
+# 不要忽略这些重要文件
+!api/
+!web/
+!zeabur.toml
+!README.md
+
+# 忽略开发相关文件
+.git/
+.github/
+.vscode/
+.idea/
+*.log
+node_modules/
+__pycache__/
+*.pyc
+.env
+.env.local
+.env.production 
