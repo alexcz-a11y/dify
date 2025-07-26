@@ -1,0 +1,14 @@
+[build]
+builder = "nixpacks"
+buildCommand = "pip install uv && uv sync --locked"
+
+[deploy]
+startCommand = "python app.py"
+healthCheckPath = "/health"
+healthCheckTimeout = 300
+
+[env]
+FLASK_APP = "app.py"
+EDITION = "SELF_HOSTED"
+DEPLOY_ENV = "PRODUCTION"
+TZ = "UTC" 
